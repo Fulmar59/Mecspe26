@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<title>MECSPE 2026 — Raccolta Contatti</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#0e0f13;color:#fff;font-family:'Sora',sans-serif;min-height:100vh;}
+  input,select,textarea,button{font-family:'Sora',sans-serif;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+  @keyframes toastIn{from{opacity:0;top:6px;}to{opacity:1;top:18px;}}
+  .page{animation:fadeUp 0.25s ease;}
+  .wrap{max-width:430px;margin:0 auto;padding:0 18px 80px;}
+  .btn-primary{width:100%;padding:13px 18px;border-radius:11px;border:none;background:linear-gradient(135deg,#00d4aa,#0099ff);color:#001a14;font-weight:700;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;}
+  .btn-secondary{width:100%;padding:13px 18px;border-radius:11px;border:1px solid rgba(255,255,255,0.13);background:rgba(255,255,255,0.05);color:#fff;font-weight:500;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;}
+  .btn-primary:active,.btn-secondary:active{opacity:0.8;transform:scale(0.98);}
+  .field-label{display:block;color:rgba(255,255,255,0.4);font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;}
+  .field-input{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.11);border-radius:8px;padding:9px 11px;color:#fff;font-size:14px;outline:none;transition:border-color 0.15s;margin-bottom:11px;}
+  .field-input:focus{border-color:#00d4aa;}
+  .field-input option{background:#1a1a2e;}
+  .card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:16px 14px;margin-bottom:14px;}
+  .back-btn{background:none;border:none;color:rgba(255,255,255,0.35);cursor:pointer;font-size:13px;padding:28px 0 16px;display:flex;align-items:center;gap:4px;}
+  .badge{display:inline-flex;align-items:center;background:rgba(0,212,170,0.15);color:#00d4aa;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;}
+  .toast{position:fixed;left:50%;transform:translateX(-50%);padding:10px 22px;border-radius:30px;font-weight:700;font-size:13px;z-index:9999;white-space:nowrap;animation:toastIn 0.25s ease forwards;}
+  #app{background:radial-gradient(ellipse 90% 45% at 50% -5%, rgba(0,212,170,0.12), transparent);min-height:100vh;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const ALL_COLUMNS = [
+  "FONTE","RAGIONE SOCIALE","INDIRIZZO","CAP","CITTA'","PROVINCIA","Regione",
+  "Segnalatore","P.I. / VAT","TELEFONO 1","TELEFONO 2","INDIRIZZO @ 1",
+  "INDIRIZZO @ 2","WEBSITE","RIFERIMENTO 1","RUOLO","RIFERIMENTO 2","RUOLO_2",
+  "STATO CLIENTE","SETTORE CLIENTE","MES","LIVELLO DI SODDISFAZIONE","ERP",
+  "Data ultimo ordine","Data ultimo contatto","Tipo ultimo contatto","Note 1",
+  "NOTE 2","FEEDBACK","PROSSIMO PASSO","DESCRIZIONE","STATO",
+  "TIPO CONTATTO","COMM","LIVELLO INTERESSE","VARIE","DATA SEGNALAZIONE",
+  "DATA INCONTRO","MODALITA'","TECNICO/AMMINISTRATIVO","TIPO MAILING"
+];
+
+const FIERA_FIELDS = [
+  {key:"RAGIONE SOCIALE",   label:"Ragione Sociale / Azienda", type:"text",     required:true, ocr:"azienda"},
+  {key:"RIFERIMENTO 1",    label:"Nome Contatto",              type:"text",     ocr:"nome_cognome"},
+  {key:"RUOLO",            label:"Ruolo",                      type:"text",     ocr:"ruolo"},
+  {key:"TELEFONO 1",       label:"Telefono",                   type:"tel",      ocr:"telefono"},
+  {key:"INDIRIZZO @ 1",    label:"Email",                      type:"email",    ocr:"email"},
+  {key:"INDIRIZZO",        label:"Indirizzo",                  type:"text",     ocr:"indirizzo"},
+  {key:"CAP",              label:"CAP",                        type:"text",     ocr:"cap"},
+  {key:"CITTA'",           label:"Città",                      type:"text",     ocr:"citta"},
+  {key:"PROVINCIA",        label:"Provincia",                  type:"text",     ocr:"provincia"},
+  {key:"WEBSITE",          label:"Website",                    type:"text",     ocr:"website"},
+  {key:"SETTORE CLIENTE",  label:"Settore",                    type:"text"},
+  {key:"LIVELLO INTERESSE",label:"Livello Interesse",          type:"select",   options:["","Alto","Medio","Basso"]},
+  {key:"STATO CLIENTE",    label:"Stato Cliente",              type:"select",   options:["","Prospect","Cliente","Partner","Varie"]},
+  {key:"Note 1",           label:"Note",                       type:"textarea"},
+];
+
+let contacts = JSON.parse(localStorage.getItem('mecspe26_contacts') || '[]');
+let currentView = 'home';
+let currentForm = emptyForm();
+let previewURL = null;
+
+function emptyForm() {
+  const f = {};
+  FIERA_FIELDS.forEach(x => f[x.key] = '');
+  f['FONTE'] = 'MECSPE 26';
+  f['DATA INCONTRO'] = new Date().toLocaleDateString('it-IT');
+  return f;
+}
+
+function saveContacts() {
+  localStorage.setItem('mecspe26_contacts', JSON.stringify(contacts));
+}
+
+// ── OCR via Netlify function ──────────────────────────────
+async function runOCR(b64, mime) {
+  const res = await fetch('/.netlify/functions/ocr', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ image: b64, mediaType: mime })
+  });
+  if (!res.ok) throw new Error('Errore server: ' + res.status);
+  const text = await res.text();
+  return JSON.parse(text);
+}
+
+function applyOCR(ocr) {
+  FIERA_FIELDS.forEach(f => {
+    if (f.ocr && ocr[f.ocr]) currentForm[f.key] = ocr[f.ocr];
+  });
+}
+
+// ── Export CSV ────────────────────────────────────────────
+function exportCSV() {
+  const header = ALL_COLUMNS.join(';');
+  const rows = contacts.map(c =>
+    ALL_COLUMNS.map(col => '"' + (c[col]||'').replace(/"/g,'""') + '"').join(';')
+  );
+  const csv = [header, ...rows].join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'MECSPE26_contatti_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+  showToast('✅ File CSV scaricato!');
+}
+
+// ── Toast ─────────────────────────────────────────────────
+function showToast(msg, ok=true) {
+  const existing = document.getElementById('toast');
+  if(existing) existing.remove();
+  const t = document.createElement('div');
+  t.id='toast'; t.className='toast';
+  t.style.background = ok ? '#00d4aa' : '#ff5c5c';
+  t.style.color = ok ? '#001a14' : '#fff';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 2800);
+}
+
+// ── Render ────────────────────────────────────────────────
+function render() {
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+  const wrap = document.createElement('div');
+  wrap.className = 'wrap page';
+  if      (currentView==='home')      renderHome(wrap);
+  else if (currentView==='scan')      renderScan(wrap);
+  else if (currentView==='analyzing') renderAnalyzing(wrap);
+  else if (currentView==='form')      renderForm(wrap);
+  else if (currentView==='contacts')  renderContacts(wrap);
+  app.appendChild(wrap);
+}
+
+function navigate(view) { currentView=view; render(); }
+
+// ── HOME ──────────────────────────────────────────────────
+function renderHome(wrap) {
+  wrap.innerHTML = `
+    <div style="padding:30px 0 26px;display:flex;align-items:center;gap:14px;">
+      <div style="width:44px;height:44px;border-radius:13px;background:linear-gradient(135deg,#00d4aa,#0099ff);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🏭</div>
+      <div>
+        <div style="font-size:20px;font-weight:800;letter-spacing:-0.02em;">MECSPE <span style="color:#00d4aa">2026</span></div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:1px;letter-spacing:0.05em;">RACCOLTA CONTATTI STAND</div>
+      </div>
+      ${contacts.length>0?`<div style="margin-left:auto;" class="badge">${contacts.length} ${contacts.length===1?'contatto':'contatti'}</div>`:''}
+    </div>
+    <button class="btn-primary" id="btn-scan">📷 Scansiona biglietto da visita</button>
+    <button class="btn-secondary" id="btn-manual">✏️ Inserimento manuale</button>
+    ${contacts.length>0?`
+    <div class="card" style="margin-top:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <span style="font-weight:700;font-size:13px;">Ultimi contatti</span>
+        <button id="btn-all" style="background:none;border:none;color:#00d4aa;font-size:12px;cursor:pointer;font-weight:600;">Vedi tutti →</button>
+      </div>
+      <div id="recent-list"></div>
+      <button class="btn-secondary" id="btn-export" style="margin-top:8px;">⬇️ Esporta CSV per Excel</button>
+    </div>`:`
+    <div style="text-align:center;color:rgba(255,255,255,0.15);margin-top:70px;font-size:14px;">
+      <div style="font-size:44px;margin-bottom:10px;">📋</div>
+      Nessun contatto ancora.<br/>Inizia scansionando un biglietto!
+    </div>`}
+  `;
+  wrap.querySelector('#btn-scan').onclick = ()=>{ previewURL=null; navigate('scan'); };
+  wrap.querySelector('#btn-manual').onclick = ()=>{ currentForm=emptyForm(); previewURL=null; navigate('form'); };
+  if(contacts.length>0) {
+    wrap.querySelector('#btn-all').onclick = ()=>navigate('contacts');
+    wrap.querySelector('#btn-export').onclick = exportCSV;
+    const list = wrap.querySelector('#recent-list');
+    contacts.slice(-3).reverse().forEach((c,i)=>list.appendChild(makeContactRow(c,i)));
+  }
+}
+
+// ── SCAN ──────────────────────────────────────────────────
+function renderScan(wrap) {
+  wrap.innerHTML = `
+    <button class="back-btn" id="back">← Indietro</button>
+    <div style="font-size:18px;font-weight:800;margin-bottom:20px;">Scansiona biglietto</div>
+    <div id="drop-zone" style="border:2px dashed rgba(0,212,170,0.35);border-radius:20px;padding:56px 20px;text-align:center;cursor:pointer;background:rgba(0,212,170,0.05);">
+      <div style="font-size:56px;">📇</div>
+      <div style="color:#00d4aa;font-weight:700;margin-top:14px;font-size:16px;">Tocca per scattare una foto</div>
+      <div style="color:rgba(255,255,255,0.25);font-size:13px;margin-top:6px;">del biglietto da visita</div>
+      <div style="margin-top:16px;display:inline-block;background:rgba(0,212,170,0.15);color:#00d4aa;border-radius:20px;padding:4px 14px;font-size:11px;font-weight:700;">CLAUDE VISION ATTIVO</div>
+    </div>
+    <input type="file" id="file-input" accept="image/*" capture="environment" style="display:none;"/>
+    <button class="btn-secondary" id="btn-manual" style="margin-top:14px;">✏️ Inserisci manualmente</button>
+  `;
+  wrap.querySelector('#back').onclick = ()=>navigate('home');
+  wrap.querySelector('#btn-manual').onclick = ()=>{ currentForm=emptyForm(); previewURL=null; navigate('form'); };
+
+  const fileInput = wrap.querySelector('#file-input');
+  const dropZone  = wrap.querySelector('#drop-zone');
+  dropZone.onclick = ()=>fileInput.click();
+
+  fileInput.onchange = async (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    previewURL = URL.createObjectURL(file);
+    currentForm = emptyForm();
+    const mime = file.type || 'image/jpeg';
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const b64 = reader.result.split(',')[1];
+      navigate('analyzing');
+      try {
+        const ocr = await runOCR(b64, mime);
+        applyOCR(ocr);
+        navigate('form');
+        showToast('Dati estratti — verifica e correggi');
+      } catch(err) {
+        console.error(err);
+        showToast('Errore OCR — inserisci manualmente', false);
+        navigate('form');
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value='';
+  };
+}
+
+// ── ANALYZING ────────────────────────────────────────────
+function renderAnalyzing(wrap) {
+  wrap.innerHTML = `
+    <div style="text-align:center;padding:80px 20px;">
+      ${previewURL?`<img src="${previewURL}" style="width:100%;max-height:200px;object-fit:contain;border-radius:14px;margin-bottom:32px;opacity:0.4;"/>`:''}
+      <div style="width:52px;height:52px;border:3px solid rgba(0,212,170,0.25);border-top:3px solid #00d4aa;border-radius:50%;animation:spin 0.9s linear infinite;margin:0 auto 22px;"></div>
+      <div style="color:#00d4aa;font-weight:700;font-size:17px;">Claude sta analizzando...</div>
+      <div style="color:rgba(255,255,255,0.3);font-size:13px;margin-top:8px;">Lettura del biglietto da visita</div>
+    </div>
+  `;
+}
+
+// ── FORM ─────────────────────────────────────────────────
+function renderForm(wrap) {
+  let html = `
+    <button class="back-btn" id="back">← Indietro</button>
+    ${previewURL?`<img src="${previewURL}" style="width:100%;max-height:150px;object-fit:contain;border-radius:12px;margin-bottom:16px;opacity:0.65;background:rgba(255,255,255,0.04);"/>`:''}
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+      <div style="font-size:17px;font-weight:800;">${previewURL?'Verifica i dati':'Nuovo contatto'}</div>
+      ${previewURL?'<div class="badge">OCR completato</div>':''}
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:14px;">
+      <div style="flex:1;background:rgba(0,212,170,0.1);border:1px solid rgba(0,212,170,0.3);border-radius:8px;padding:8px 11px;">
+        <div style="font-size:10px;font-weight:700;color:#00d4aa;letter-spacing:0.1em;text-transform:uppercase;">Fonte</div>
+        <div style="font-size:13px;font-weight:600;margin-top:2px;">MECSPE 26</div>
+      </div>
+      <div style="flex:1;background:rgba(0,212,170,0.1);border:1px solid rgba(0,212,170,0.3);border-radius:8px;padding:8px 11px;">
+        <div style="font-size:10px;font-weight:700;color:#00d4aa;letter-spacing:0.1em;text-transform:uppercase;">Data</div>
+        <div style="font-size:13px;font-weight:600;margin-top:2px;">${currentForm['DATA INCONTRO']}</div>
+      </div>
+    </div>
+    <div class="card">
+  `;
+  FIERA_FIELDS.forEach(f => {
+    const val = (currentForm[f.key]||'').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+    if(f.type==='select') {
+      html+=`<label class="field-label">${f.label}${f.required?'<span style="color:#00d4aa;margin-left:3px;">*</span>':''}</label>
+        <select class="field-input" data-key="${f.key}">${f.options.map(o=>`<option value="${o}" ${currentForm[f.key]===o?'selected':''}>${o||'— Seleziona —'}</option>`).join('')}</select>`;
+    } else if(f.type==='textarea') {
+      html+=`<label class="field-label">${f.label}</label>
+        <textarea class="field-input" data-key="${f.key}" rows="3" style="resize:vertical;">${currentForm[f.key]||''}</textarea>`;
+    } else {
+      html+=`<label class="field-label">${f.label}${f.required?'<span style="color:#00d4aa;margin-left:3px;">*</span>':''}</label>
+        <input type="${f.type||'text'}" class="field-input" data-key="${f.key}" value="${val}"/>`;
+    }
+  });
+  html+=`</div>
+    <button class="btn-primary" id="btn-save">✓ Salva contatto</button>
+    <button class="btn-secondary" id="btn-scan2">📷 Scansiona un altro</button>
+  `;
+  wrap.innerHTML = html;
+  wrap.querySelector('#back').onclick = ()=>navigate('home');
+  wrap.querySelector('#btn-scan2').onclick = ()=>{ previewURL=null; navigate('scan'); };
+  wrap.querySelectorAll('.field-input').forEach(el=>{
+    el.addEventListener('input', ()=>currentForm[el.dataset.key]=el.value);
+    el.addEventListener('change',()=>currentForm[el.dataset.key]=el.value);
+  });
+  wrap.querySelector('#btn-save').onclick = ()=>{
+    wrap.querySelectorAll('.field-input').forEach(el=>currentForm[el.dataset.key]=el.value);
+    if(!currentForm['RAGIONE SOCIALE'].trim()){ showToast('⚠️ Ragione Sociale obbligatoria',false); return; }
+    contacts.push({...currentForm, _id:Date.now()});
+    saveContacts();
+    showToast('✅ Contatto salvato!');
+    currentForm=emptyForm(); previewURL=null;
+    navigate('home');
+  };
+}
+
+// ── CONTACTS ─────────────────────────────────────────────
+function renderContacts(wrap) {
+  wrap.innerHTML = `
+    <button class="back-btn" id="back">← Indietro</button>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+      <div style="font-size:18px;font-weight:800;">Tutti i contatti</div>
+      <div class="badge">${contacts.length}</div>
+    </div>
+    <div id="contacts-list"></div>
+    ${contacts.length>0?'<button class="btn-primary" id="btn-export" style="margin-top:10px;">⬇️ Esporta tutto in CSV</button>':'<div style="text-align:center;color:rgba(255,255,255,0.2);margin-top:40px;font-size:14px;">Nessun contatto salvato</div>'}
+  `;
+  wrap.querySelector('#back').onclick = ()=>navigate('home');
+  if(contacts.length>0) wrap.querySelector('#btn-export').onclick = exportCSV;
+  const list = wrap.querySelector('#contacts-list');
+  contacts.slice().reverse().forEach((c,i)=>list.appendChild(makeContactRow(c,i)));
+}
+
+function makeContactRow(c,i) {
+  const colors=['#00d4aa','#0099ff','#ff6b9d','#f5c842','#a78bfa'];
+  const color=colors[i%colors.length];
+  const div=document.createElement('div');
+  div.style.cssText='display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;margin-bottom:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);';
+  div.innerHTML=`
+    <div style="width:36px;height:36px;border-radius:50%;flex-shrink:0;background:${color}33;border:2px solid ${color}66;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:${color};">${(c['RAGIONE SOCIALE']||'?')[0].toUpperCase()}</div>
+    <div style="flex:1;min-width:0;">
+      <div style="font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c['RAGIONE SOCIALE']||'—'}</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:1px;">${c['RIFERIMENTO 1']||''}${c['RUOLO']?' · '+c['RUOLO']:''}</div>
+    </div>
+    <div style="font-size:11px;color:#00d4aa;font-weight:600;flex-shrink:0;">${c['LIVELLO INTERESSE']||'—'}</div>
+    <button data-id="${c._id}" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.2);font-size:16px;padding:2px;line-height:1;">✕</button>
+  `;
+  div.querySelector('button').onclick=(e)=>{
+    contacts=contacts.filter(x=>x._id!==parseInt(e.target.dataset.id));
+    saveContacts(); render();
+  };
+  return div;
+}
+
+render();
+</script>
+</body>
+</html>
