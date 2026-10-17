@@ -314,8 +314,13 @@ function renderForm(wrap) {
       html+=`<label class="field-label">${f.label}${f.required?'<span style="color:#CC0000;margin-left:3px;">*</span>':''}</label>
         <select class="field-input" data-key="${f.key}">${f.options.map(o=>`<option value="${o}" ${currentForm[f.key]===o?'selected':''}>${o||'— Seleziona —'}</option>`).join('')}</select>`;
     } else if(f.type==='textarea') {
-      html+=`<label class="field-label">${f.label}</label>
-        <textarea class="field-input" data-key="${f.key}" rows="3" style="resize:vertical;">${currentForm[f.key]||''}</textarea>`;
+      html+=`<label class="field-label" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>${f.label}</span>
+          <button id="mic-btn" type="button" title="Dettatura vocale" style="background:none;border:1px solid var(--red-border);border-radius:20px;padding:3px 10px;cursor:pointer;font-size:12px;color:var(--red);display:flex;align-items:center;gap:4px;line-height:1.4;">
+            <span id="mic-icon">🎙️</span><span id="mic-label">Detta</span>
+          </button>
+        </label>
+        <textarea class="field-input" id="note-field" data-key="${f.key}" rows="3" style="resize:vertical;">${currentForm[f.key]||''}</textarea>`;
     } else {
       html+=`<label class="field-label">${f.label}${f.required?'<span style="color:#CC0000;margin-left:3px;">*</span>':''}</label>
         <input type="${f.type||'text'}" class="field-input" data-key="${f.key}" value="${val}"/>`;
@@ -332,6 +337,66 @@ function renderForm(wrap) {
     el.addEventListener('input', ()=>currentForm[el.dataset.key]=el.value);
     el.addEventListener('change',()=>currentForm[el.dataset.key]=el.value);
   });
+
+  // ── DETTATURA VOCALE ─────────────────────────────────────
+  const micBtn = wrap.querySelector('#mic-btn');
+  const micIcon = wrap.querySelector('#mic-icon');
+  const micLabel = wrap.querySelector('#mic-label');
+  const noteField = wrap.querySelector('#note-field');
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRec) {
+    if (micBtn) { micBtn.style.opacity='0.3'; micBtn.title='Dettatura non supportata su questo browser'; micBtn.style.cursor='default'; }
+  } else {
+    const rec = new SpeechRec();
+    rec.lang = 'it-IT';
+    rec.continuous = true;
+    rec.interimResults = true;
+    let isListening = false;
+    let baseText = '';
+
+    rec.onresult = (e) => {
+      let interim = '';
+      let final = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        if (e.results[i].isFinal) final += e.results[i][0].transcript;
+        else interim += e.results[i][0].transcript;
+      }
+      if (final) baseText += (baseText && !baseText.endsWith(' ') ? ' ' : '') + final;
+      noteField.value = baseText + (interim ? ' ' + interim : '');
+      currentForm['Note 1'] = noteField.value;
+    };
+
+    rec.onerror = (e) => {
+      if (e.error === 'not-allowed') showToast('⚠️ Microfono non autorizzato', false);
+      else if (e.error !== 'no-speech') showToast('⚠️ Errore microfono: ' + e.error, false);
+      stopListening();
+    };
+
+    rec.onend = () => { if (isListening) rec.start(); }; // riavvia se ancora attivo
+
+    function startListening() {
+      baseText = noteField.value;
+      if (baseText && !baseText.endsWith(' ')) baseText += ' ';
+      isListening = true;
+      micBtn.style.background = 'rgba(204,0,0,0.2)';
+      micBtn.style.borderColor = '#CC0000';
+      micIcon.textContent = '⏹️';
+      micLabel.textContent = 'Stop';
+      rec.start();
+    }
+    function stopListening() {
+      isListening = false;
+      rec.stop();
+      micBtn.style.background = 'none';
+      micBtn.style.borderColor = 'var(--red-border)';
+      micIcon.textContent = '🎙️';
+      micLabel.textContent = 'Detta';
+      currentForm['Note 1'] = noteField.value;
+    }
+
+    micBtn.onclick = () => { isListening ? stopListening() : startListening(); };
+  }
+
   wrap.querySelector('#btn-save').onclick = ()=>{
     wrap.querySelectorAll('.field-input').forEach(el=>currentForm[el.dataset.key]=el.value);
     if(!currentForm['RAGIONE SOCIALE'].trim()){ showToast('⚠️ Ragione Sociale obbligatoria',false); return; }
