@@ -5,29 +5,59 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<title>MECSPE 2026 — Raccolta Contatti</title>
+<title>MECSPE 2027 — Raccolta Contatti</title>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <style>
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{background:#0e0f13;color:#fff;font-family:'Sora',sans-serif;min-height:100vh;}
+  :root{
+    --red:#CC0000;
+    --red-dark:#990000;
+    --red-light:rgba(204,0,0,0.15);
+    --red-border:rgba(204,0,0,0.35);
+    --bg:#0a0a0a;
+    --surface:rgba(255,255,255,0.04);
+    --border:rgba(255,255,255,0.09);
+    --text-muted:rgba(255,255,255,0.38);
+  }
+  body{background:var(--bg);color:#fff;font-family:'Sora',sans-serif;min-height:100vh;}
   input,select,textarea,button{font-family:'Sora',sans-serif;}
   @keyframes spin{to{transform:rotate(360deg);}}
   @keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
   @keyframes toastIn{from{opacity:0;top:6px;}to{opacity:1;top:18px;}}
   .page{animation:fadeUp 0.25s ease;}
   .wrap{max-width:430px;margin:0 auto;padding:0 18px 80px;}
-  .btn-primary{width:100%;padding:13px 18px;border-radius:11px;border:none;background:linear-gradient(135deg,#00d4aa,#0099ff);color:#001a14;font-weight:700;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;}
-  .btn-secondary{width:100%;padding:13px 18px;border-radius:11px;border:1px solid rgba(255,255,255,0.13);background:rgba(255,255,255,0.05);color:#fff;font-weight:500;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;}
+  .btn-primary{width:100%;padding:13px 18px;border-radius:11px;border:none;background:linear-gradient(135deg,var(--red),var(--red-dark));color:#fff;font-weight:700;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;box-shadow:0 4px 18px rgba(204,0,0,0.3);}
+  .btn-secondary{width:100%;padding:13px 18px;border-radius:11px;border:1px solid var(--border);background:var(--surface);color:#fff;font-weight:500;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;}
   .btn-primary:active,.btn-secondary:active{opacity:0.8;transform:scale(0.98);}
-  .field-label{display:block;color:rgba(255,255,255,0.4);font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;}
-  .field-input{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.11);border-radius:8px;padding:9px 11px;color:#fff;font-size:14px;outline:none;transition:border-color 0.15s;margin-bottom:11px;}
-  .field-input:focus{border-color:#00d4aa;}
-  .field-input option{background:#1a1a2e;}
-  .card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:16px 14px;margin-bottom:14px;}
-  .back-btn{background:none;border:none;color:rgba(255,255,255,0.35);cursor:pointer;font-size:13px;padding:28px 0 16px;display:flex;align-items:center;gap:4px;}
-  .badge{display:inline-flex;align-items:center;background:rgba(0,212,170,0.15);color:#00d4aa;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;}
+  .field-label{display:block;color:var(--text-muted);font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;}
+  .field-input{width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:8px;padding:9px 11px;color:#fff;font-size:14px;outline:none;transition:border-color 0.15s;margin-bottom:11px;}
+  .field-input:focus{border-color:var(--red);}
+  .field-input option{background:#1a0000;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 14px;margin-bottom:14px;}
+  .back-btn{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:13px;padding:28px 0 16px;display:flex;align-items:center;gap:4px;}
+  .badge{display:inline-flex;align-items:center;background:var(--red-light);color:var(--red);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;border:1px solid var(--red-border);}
   .toast{position:fixed;left:50%;transform:translateX(-50%);padding:10px 22px;border-radius:30px;font-weight:700;font-size:13px;z-index:9999;white-space:nowrap;animation:toastIn 0.25s ease forwards;}
-  #app{background:radial-gradient(ellipse 90% 45% at 50% -5%, rgba(0,212,170,0.12), transparent);min-height:100vh;}
+  #app{background:radial-gradient(ellipse 90% 40% at 50% -5%, rgba(204,0,0,0.10), transparent);min-height:100vh;}
+
+  /* Header Innovo */
+  .innovo-header{
+    background:#000;
+    margin:-0px -18px 0;
+    padding:14px 22px 12px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    border-bottom:2px solid var(--red);
+  }
+  .innovo-logo{display:flex;align-items:center;gap:10px;}
+  .innovo-infinity{
+    width:38px;height:22px;position:relative;
+  }
+  .innovo-infinity svg{width:38px;height:22px;}
+  .innovo-wordmark{display:flex;flex-direction:column;line-height:1;}
+  .innovo-name{font-size:17px;font-weight:800;color:#fff;letter-spacing:0.08em;}
+  .innovo-tagline{font-size:8px;color:rgba(255,255,255,0.45);letter-spacing:0.12em;text-transform:uppercase;margin-top:2px;}
+  .innovo-mecspe{font-size:10px;font-weight:700;color:var(--red);letter-spacing:0.12em;text-transform:uppercase;}
 </style>
 </head>
 <body>
@@ -61,7 +91,7 @@ const FIERA_FIELDS = [
   {key:"Note 1",           label:"Note",                       type:"textarea"},
 ];
 
-let contacts = JSON.parse(localStorage.getItem('mecspe26_contacts') || '[]');
+let contacts = JSON.parse(localStorage.getItem('mecspe27_contacts') || '[]');
 let currentView = 'home';
 let currentForm = emptyForm();
 let previewURL = null;
@@ -69,13 +99,13 @@ let previewURL = null;
 function emptyForm() {
   const f = {};
   FIERA_FIELDS.forEach(x => f[x.key] = '');
-  f['FONTE'] = 'MECSPE 26';
+  f['FONTE'] = 'MECSPE 27';
   f['DATA INCONTRO'] = new Date().toLocaleDateString('it-IT');
   return f;
 }
 
 function saveContacts() {
-  localStorage.setItem('mecspe26_contacts', JSON.stringify(contacts));
+  localStorage.setItem('mecspe27_contacts', JSON.stringify(contacts));
 }
 
 // ── OCR via Netlify function ──────────────────────────────
@@ -103,10 +133,10 @@ function exportCSV() {
     ALL_COLUMNS.map(col => '"' + (c[col]||'').replace(/"/g,'""') + '"').join(';')
   );
   const csv = [header, ...rows].join('\n');
-  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+  const blob = new Blob(['﻿'+csv], {type:'text/csv;charset=utf-8;'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'MECSPE26_contatti_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.download = 'MECSPE27_contatti_'+new Date().toISOString().slice(0,10)+'.csv';
   a.click();
   showToast('✅ File CSV scaricato!');
 }
@@ -117,11 +147,31 @@ function showToast(msg, ok=true) {
   if(existing) existing.remove();
   const t = document.createElement('div');
   t.id='toast'; t.className='toast';
-  t.style.background = ok ? '#00d4aa' : '#ff5c5c';
-  t.style.color = ok ? '#001a14' : '#fff';
+  t.style.background = ok ? '#CC0000' : '#ff5c5c';
+  t.style.color = '#fff';
   t.textContent = msg;
   document.body.appendChild(t);
   setTimeout(()=>t.remove(), 2800);
+}
+
+// ── Header Innovo ─────────────────────────────────────────
+function innovoHeader(subtitle) {
+  return `
+    <div class="innovo-header">
+      <div class="innovo-logo">
+        <div class="innovo-infinity">
+          <svg viewBox="0 0 38 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 11 C16 6, 9 2, 5 5 C1 8, 1 14, 5 17 C9 20, 16 16, 19 11 C22 6, 29 2, 33 5 C37 8, 37 14, 33 17 C29 20, 22 16, 19 11 Z" stroke="#CC0000" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="innovo-wordmark">
+          <span class="innovo-name">INNOVO</span>
+          <span class="innovo-tagline">innovation for manufacturing</span>
+        </div>
+      </div>
+      <div class="innovo-mecspe">${subtitle}</div>
+    </div>
+  `;
 }
 
 // ── Render ────────────────────────────────────────────────
@@ -143,13 +193,11 @@ function navigate(view) { currentView=view; render(); }
 // ── HOME ──────────────────────────────────────────────────
 function renderHome(wrap) {
   wrap.innerHTML = `
-    <div style="padding:30px 0 26px;display:flex;align-items:center;gap:14px;">
-      <div style="width:44px;height:44px;border-radius:13px;background:linear-gradient(135deg,#00d4aa,#0099ff);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🏭</div>
-      <div>
-        <div style="font-size:20px;font-weight:800;letter-spacing:-0.02em;">MECSPE <span style="color:#00d4aa">2026</span></div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:1px;letter-spacing:0.05em;">RACCOLTA CONTATTI STAND</div>
-      </div>
-      ${contacts.length>0?`<div style="margin-left:auto;" class="badge">${contacts.length} ${contacts.length===1?'contatto':'contatti'}</div>`:''}
+    ${innovoHeader('MECSPE 2027')}
+    <div style="padding:24px 0 20px;">
+      <div style="font-size:22px;font-weight:800;letter-spacing:-0.02em;">Raccolta <span style="color:#CC0000">Contatti</span></div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-top:4px;letter-spacing:0.04em;">Stand MECSPE 2027 · Bologna</div>
+      ${contacts.length>0?`<div style="margin-top:10px;" class="badge">${contacts.length} ${contacts.length===1?'contatto':'contatti'} salvati</div>`:''}
     </div>
     <button class="btn-primary" id="btn-scan">📷 Scansiona biglietto da visita</button>
     <button class="btn-secondary" id="btn-manual">✏️ Inserimento manuale</button>
@@ -157,12 +205,12 @@ function renderHome(wrap) {
     <div class="card" style="margin-top:8px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
         <span style="font-weight:700;font-size:13px;">Ultimi contatti</span>
-        <button id="btn-all" style="background:none;border:none;color:#00d4aa;font-size:12px;cursor:pointer;font-weight:600;">Vedi tutti →</button>
+        <button id="btn-all" style="background:none;border:none;color:#CC0000;font-size:12px;cursor:pointer;font-weight:600;">Vedi tutti →</button>
       </div>
       <div id="recent-list"></div>
       <button class="btn-secondary" id="btn-export" style="margin-top:8px;">⬇️ Esporta CSV per Excel</button>
     </div>`:`
-    <div style="text-align:center;color:rgba(255,255,255,0.15);margin-top:70px;font-size:14px;">
+    <div style="text-align:center;color:rgba(255,255,255,0.15);margin-top:60px;font-size:14px;">
       <div style="font-size:44px;margin-bottom:10px;">📋</div>
       Nessun contatto ancora.<br/>Inizia scansionando un biglietto!
     </div>`}
@@ -180,13 +228,14 @@ function renderHome(wrap) {
 // ── SCAN ──────────────────────────────────────────────────
 function renderScan(wrap) {
   wrap.innerHTML = `
+    ${innovoHeader('MECSPE 2027')}
     <button class="back-btn" id="back">← Indietro</button>
     <div style="font-size:18px;font-weight:800;margin-bottom:20px;">Scansiona biglietto</div>
-    <div id="drop-zone" style="border:2px dashed rgba(0,212,170,0.35);border-radius:20px;padding:56px 20px;text-align:center;cursor:pointer;background:rgba(0,212,170,0.05);">
+    <div id="drop-zone" style="border:2px dashed rgba(204,0,0,0.4);border-radius:20px;padding:56px 20px;text-align:center;cursor:pointer;background:rgba(204,0,0,0.05);">
       <div style="font-size:56px;">📇</div>
-      <div style="color:#00d4aa;font-weight:700;margin-top:14px;font-size:16px;">Tocca per scattare una foto</div>
+      <div style="color:#CC0000;font-weight:700;margin-top:14px;font-size:16px;">Tocca per scattare una foto</div>
       <div style="color:rgba(255,255,255,0.25);font-size:13px;margin-top:6px;">del biglietto da visita</div>
-      <div style="margin-top:16px;display:inline-block;background:rgba(0,212,170,0.15);color:#00d4aa;border-radius:20px;padding:4px 14px;font-size:11px;font-weight:700;">CLAUDE VISION ATTIVO</div>
+      <div style="margin-top:16px;display:inline-block;background:rgba(204,0,0,0.15);color:#CC0000;border-radius:20px;padding:4px 14px;font-size:11px;font-weight:700;border:1px solid rgba(204,0,0,0.35);">CLAUDE VISION ATTIVO</div>
     </div>
     <input type="file" id="file-input" accept="image/*" capture="environment" style="display:none;"/>
     <button class="btn-secondary" id="btn-manual" style="margin-top:14px;">✏️ Inserisci manualmente</button>
@@ -227,10 +276,11 @@ function renderScan(wrap) {
 // ── ANALYZING ────────────────────────────────────────────
 function renderAnalyzing(wrap) {
   wrap.innerHTML = `
+    ${innovoHeader('MECSPE 2027')}
     <div style="text-align:center;padding:80px 20px;">
       ${previewURL?`<img src="${previewURL}" style="width:100%;max-height:200px;object-fit:contain;border-radius:14px;margin-bottom:32px;opacity:0.4;"/>`:''}
-      <div style="width:52px;height:52px;border:3px solid rgba(0,212,170,0.25);border-top:3px solid #00d4aa;border-radius:50%;animation:spin 0.9s linear infinite;margin:0 auto 22px;"></div>
-      <div style="color:#00d4aa;font-weight:700;font-size:17px;">Claude sta analizzando...</div>
+      <div style="width:52px;height:52px;border:3px solid rgba(204,0,0,0.25);border-top:3px solid #CC0000;border-radius:50%;animation:spin 0.9s linear infinite;margin:0 auto 22px;"></div>
+      <div style="color:#CC0000;font-weight:700;font-size:17px;">Claude sta analizzando...</div>
       <div style="color:rgba(255,255,255,0.3);font-size:13px;margin-top:8px;">Lettura del biglietto da visita</div>
     </div>
   `;
@@ -239,6 +289,7 @@ function renderAnalyzing(wrap) {
 // ── FORM ─────────────────────────────────────────────────
 function renderForm(wrap) {
   let html = `
+    ${innovoHeader('MECSPE 2027')}
     <button class="back-btn" id="back">← Indietro</button>
     ${previewURL?`<img src="${previewURL}" style="width:100%;max-height:150px;object-fit:contain;border-radius:12px;margin-bottom:16px;opacity:0.65;background:rgba(255,255,255,0.04);"/>`:''}
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
@@ -246,12 +297,12 @@ function renderForm(wrap) {
       ${previewURL?'<div class="badge">OCR completato</div>':''}
     </div>
     <div style="display:flex;gap:10px;margin-bottom:14px;">
-      <div style="flex:1;background:rgba(0,212,170,0.1);border:1px solid rgba(0,212,170,0.3);border-radius:8px;padding:8px 11px;">
-        <div style="font-size:10px;font-weight:700;color:#00d4aa;letter-spacing:0.1em;text-transform:uppercase;">Fonte</div>
-        <div style="font-size:13px;font-weight:600;margin-top:2px;">MECSPE 26</div>
+      <div style="flex:1;background:rgba(204,0,0,0.1);border:1px solid rgba(204,0,0,0.3);border-radius:8px;padding:8px 11px;">
+        <div style="font-size:10px;font-weight:700;color:#CC0000;letter-spacing:0.1em;text-transform:uppercase;">Fonte</div>
+        <div style="font-size:13px;font-weight:600;margin-top:2px;">MECSPE 27</div>
       </div>
-      <div style="flex:1;background:rgba(0,212,170,0.1);border:1px solid rgba(0,212,170,0.3);border-radius:8px;padding:8px 11px;">
-        <div style="font-size:10px;font-weight:700;color:#00d4aa;letter-spacing:0.1em;text-transform:uppercase;">Data</div>
+      <div style="flex:1;background:rgba(204,0,0,0.1);border:1px solid rgba(204,0,0,0.3);border-radius:8px;padding:8px 11px;">
+        <div style="font-size:10px;font-weight:700;color:#CC0000;letter-spacing:0.1em;text-transform:uppercase;">Data</div>
         <div style="font-size:13px;font-weight:600;margin-top:2px;">${currentForm['DATA INCONTRO']}</div>
       </div>
     </div>
@@ -260,13 +311,13 @@ function renderForm(wrap) {
   FIERA_FIELDS.forEach(f => {
     const val = (currentForm[f.key]||'').replace(/"/g,'&quot;').replace(/</g,'&lt;');
     if(f.type==='select') {
-      html+=`<label class="field-label">${f.label}${f.required?'<span style="color:#00d4aa;margin-left:3px;">*</span>':''}</label>
+      html+=`<label class="field-label">${f.label}${f.required?'<span style="color:#CC0000;margin-left:3px;">*</span>':''}</label>
         <select class="field-input" data-key="${f.key}">${f.options.map(o=>`<option value="${o}" ${currentForm[f.key]===o?'selected':''}>${o||'— Seleziona —'}</option>`).join('')}</select>`;
     } else if(f.type==='textarea') {
       html+=`<label class="field-label">${f.label}</label>
         <textarea class="field-input" data-key="${f.key}" rows="3" style="resize:vertical;">${currentForm[f.key]||''}</textarea>`;
     } else {
-      html+=`<label class="field-label">${f.label}${f.required?'<span style="color:#00d4aa;margin-left:3px;">*</span>':''}</label>
+      html+=`<label class="field-label">${f.label}${f.required?'<span style="color:#CC0000;margin-left:3px;">*</span>':''}</label>
         <input type="${f.type||'text'}" class="field-input" data-key="${f.key}" value="${val}"/>`;
     }
   });
@@ -295,6 +346,7 @@ function renderForm(wrap) {
 // ── CONTACTS ─────────────────────────────────────────────
 function renderContacts(wrap) {
   wrap.innerHTML = `
+    ${innovoHeader('MECSPE 2027')}
     <button class="back-btn" id="back">← Indietro</button>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
       <div style="font-size:18px;font-weight:800;">Tutti i contatti</div>
@@ -310,7 +362,7 @@ function renderContacts(wrap) {
 }
 
 function makeContactRow(c,i) {
-  const colors=['#00d4aa','#0099ff','#ff6b9d','#f5c842','#a78bfa'];
+  const colors=['#CC0000','#ff4444','#ff8800','#cc6600','#ee2222'];
   const color=colors[i%colors.length];
   const div=document.createElement('div');
   div.style.cssText='display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;margin-bottom:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);';
@@ -320,7 +372,7 @@ function makeContactRow(c,i) {
       <div style="font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c['RAGIONE SOCIALE']||'—'}</div>
       <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:1px;">${c['RIFERIMENTO 1']||''}${c['RUOLO']?' · '+c['RUOLO']:''}</div>
     </div>
-    <div style="font-size:11px;color:#00d4aa;font-weight:600;flex-shrink:0;">${c['LIVELLO INTERESSE']||'—'}</div>
+    <div style="font-size:11px;color:#CC0000;font-weight:600;flex-shrink:0;">${c['LIVELLO INTERESSE']||'—'}</div>
     <button data-id="${c._id}" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.2);font-size:16px;padding:2px;line-height:1;">✕</button>
   `;
   div.querySelector('button').onclick=(e)=>{
