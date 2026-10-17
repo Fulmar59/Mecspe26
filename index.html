@@ -95,6 +95,7 @@ let contacts = JSON.parse(localStorage.getItem('mecspe27_contacts') || '[]');
 let currentView = 'home';
 let currentForm = emptyForm();
 let previewURL = null;
+let editingId = null; // null = nuovo contatto, altrimenti _id del contatto in modifica
 
 function emptyForm() {
   const f = {};
@@ -293,8 +294,9 @@ function renderForm(wrap) {
     <button class="back-btn" id="back">← Indietro</button>
     ${previewURL?`<img src="${previewURL}" style="width:100%;max-height:150px;object-fit:contain;border-radius:12px;margin-bottom:16px;opacity:0.65;background:rgba(255,255,255,0.04);"/>`:''}
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-      <div style="font-size:17px;font-weight:800;">${previewURL?'Verifica i dati':'Nuovo contatto'}</div>
-      ${previewURL?'<div class="badge">OCR completato</div>':''}
+      <div style="font-size:17px;font-weight:800;">${editingId!==null?'Modifica contatto':previewURL?'Verifica i dati':'Nuovo contatto'}</div>
+      ${previewURL&&editingId===null?'<div class="badge">OCR completato</div>':''}
+      ${editingId!==null?'<div class="badge" style="background:rgba(255,140,0,0.15);color:#ff8c00;border-color:rgba(255,140,0,0.35);">Modifica</div>':''}
     </div>
     <div style="display:flex;gap:10px;margin-bottom:14px;">
       <div style="flex:1;background:rgba(204,0,0,0.1);border:1px solid rgba(204,0,0,0.3);border-radius:8px;padding:8px 11px;">
@@ -327,12 +329,12 @@ function renderForm(wrap) {
     }
   });
   html+=`</div>
-    <button class="btn-primary" id="btn-save">✓ Salva contatto</button>
-    <button class="btn-secondary" id="btn-scan2">📷 Scansiona un altro</button>
+    <button class="btn-primary" id="btn-save">${editingId!==null?'✓ Aggiorna contatto':'✓ Salva contatto'}</button>
+    ${editingId===null?'<button class="btn-secondary" id="btn-scan2">📷 Scansiona un altro</button>':''}
   `;
   wrap.innerHTML = html;
-  wrap.querySelector('#back').onclick = ()=>navigate('home');
-  wrap.querySelector('#btn-scan2').onclick = ()=>{ previewURL=null; navigate('scan'); };
+  wrap.querySelector('#back').onclick = ()=>{ editingId=null; navigate('home'); };
+  if(wrap.querySelector('#btn-scan2')) wrap.querySelector('#btn-scan2').onclick = ()=>{ previewURL=null; navigate('scan'); };
   wrap.querySelectorAll('.field-input').forEach(el=>{
     el.addEventListener('input', ()=>currentForm[el.dataset.key]=el.value);
     el.addEventListener('change',()=>currentForm[el.dataset.key]=el.value);
@@ -412,10 +414,17 @@ function renderForm(wrap) {
   wrap.querySelector('#btn-save').onclick = ()=>{
     wrap.querySelectorAll('.field-input').forEach(el=>currentForm[el.dataset.key]=el.value);
     if(!currentForm['RAGIONE SOCIALE'].trim()){ showToast('⚠️ Ragione Sociale obbligatoria',false); return; }
-    contacts.push({...currentForm, _id:Date.now()});
+    if(editingId !== null) {
+      // modalità modifica: aggiorna il contatto esistente
+      const idx = contacts.findIndex(x=>x._id===editingId);
+      if(idx !== -1) contacts[idx] = {...currentForm, _id:editingId};
+      showToast('✅ Contatto aggiornato!');
+    } else {
+      contacts.push({...currentForm, _id:Date.now()});
+      showToast('✅ Contatto salvato!');
+    }
     saveContacts();
-    showToast('✅ Contatto salvato!');
-    currentForm=emptyForm(); previewURL=null;
+    currentForm=emptyForm(); previewURL=null; editingId=null;
     navigate('home');
   };
 }
@@ -442,7 +451,7 @@ function makeContactRow(c,i) {
   const colors=['#CC0000','#ff4444','#ff8800','#cc6600','#ee2222'];
   const color=colors[i%colors.length];
   const div=document.createElement('div');
-  div.style.cssText='display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;margin-bottom:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);';
+  div.style.cssText='display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;margin-bottom:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);cursor:pointer;';
   div.innerHTML=`
     <div style="width:36px;height:36px;border-radius:50%;flex-shrink:0;background:${color}33;border:2px solid ${color}66;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:${color};">${(c['RAGIONE SOCIALE']||'?')[0].toUpperCase()}</div>
     <div style="flex:1;min-width:0;">
@@ -450,12 +459,25 @@ function makeContactRow(c,i) {
       <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:1px;">${c['RIFERIMENTO 1']||''}${c['RUOLO']?' · '+c['RUOLO']:''}</div>
     </div>
     <div style="font-size:11px;color:#CC0000;font-weight:600;flex-shrink:0;">${c['LIVELLO INTERESSE']||'—'}</div>
-    <button data-id="${c._id}" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.2);font-size:16px;padding:2px;line-height:1;">✕</button>
+    <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">
+      <button data-action="edit" data-id="${c._id}" title="Modifica" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.35);font-size:14px;padding:2px;line-height:1;">✏️</button>
+      <button data-action="del" data-id="${c._id}" title="Elimina" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.2);font-size:14px;padding:2px;line-height:1;">✕</button>
+    </div>
   `;
-  div.querySelector('button').onclick=(e)=>{
-    contacts=contacts.filter(x=>x._id!==parseInt(e.target.dataset.id));
-    saveContacts(); render();
-  };
+  div.querySelectorAll('button').forEach(btn => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      const id = parseInt(btn.dataset.id);
+      if(btn.dataset.action === 'del') {
+        contacts = contacts.filter(x=>x._id!==id);
+        saveContacts(); render();
+      } else {
+        // modifica
+        const contact = contacts.find(x=>x._id===id);
+        if(contact) { currentForm={...contact}; editingId=id; previewURL=null; navigate('form'); }
+      }
+    };
+  });
   return div;
 }
 
