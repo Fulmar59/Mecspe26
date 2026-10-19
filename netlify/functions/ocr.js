@@ -14,7 +14,7 @@ exports.handler = async (event) => {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-5',
+        model: 'claude-sonnet-5-5',
         max_tokens: 1000,
         system: `Sei un sistema OCR per biglietti da visita aziendali italiani. Analizza l'immagine e restituisci SOLO JSON valido, nessun testo extra, nessun markdown. Campi: azienda, nome_cognome, ruolo, telefono, email, indirizzo, cap, citta, provincia, website. Usa stringa vuota "" se non presente.`,
         messages: [{
